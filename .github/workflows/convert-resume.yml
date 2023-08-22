@@ -1,0 +1,42 @@
+name: Convert Resume and Deploy
+
+on:
+  push:
+    branches:
+      - main # Replace with the branch you want to trigger the workflow on
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Install Pandoc
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install -qy pandoc
+      shell: bash
+
+    - name: Convert to HTML and PDF
+      run: |
+        pandoc -o resume.html resume.docx
+        pandoc -o resume.pdf resume.docx
+      working-directory: ${{ github.workspace }}
+
+    - name: Upload HTML and PDF
+      uses: actions/upload-artifact@v2
+      with:
+        name: resume-artifacts
+        path: .
+
+    - name: Deploy to S3
+      uses: jakejarvis/s3-sync-action@v0.4.0
+      with:
+        args: --acl public-read --follow-symlinks --delete
+      env:
+        AWS_S3_BUCKET: ${{ secrets.AWS_S3_BUCKET }}
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      if: success()
