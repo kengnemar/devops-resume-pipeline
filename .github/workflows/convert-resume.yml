@@ -13,10 +13,12 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v2
 
-    - name: Install Pandoc
+    - name: Install Pandoc & LateX(texlive-xetex)
       run: |
         sudo apt-get update -q
         sudo apt-get install -qy pandoc
+        sudo apt-get install -qy texlive-xetex
+
       shell: bash
 
     - name: Convert to HTML and PDF
